@@ -1,0 +1,403 @@
+import React, { useContext, useEffect, useState } from "react";
+import { ExcelContext } from "../context/excel-context";
+import { MultiSelect } from "react-multi-select-component";
+import "./Dashboard.css";
+import PieChart from "./charts/PieChart";
+import BarChart from "./charts/BarChart";
+import LineChart from "./charts/LineChart";
+
+const Dashboard = () => {
+  const { excelData } = useContext(ExcelContext);
+  const [compareList, setCompareList] = useState({});
+  const [filteredExcelData, setFilteredExcelData] = useState([]);
+  const [arrayToDisplay, setArrayToDisplay] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [selectedTitle, setSelectedTitle] = useState([]);
+  const [sortSelection, setSortSelection] = useState({
+    sortValue: "",
+    sortDirection: "asc",
+  });
+
+  const checkHandler = (e) => {
+    let nameData = e.target.name;
+    if (e.target.checked) {
+      setSelectedTitle([...selectedTitle, e.target.name]);
+      console.log(e.target.name);
+      const tempArray = JSON.parse(JSON.stringify(excelData));
+      const updatedTempArray = [];
+
+      const updatedDropdownArraySet = new Set();
+
+      for (let i = 0; i < tempArray.length; i++) {
+        let currentvalue = tempArray[i][nameData];
+
+        if (updatedDropdownArraySet.has(currentvalue)) {
+          delete tempArray[i][nameData];
+        } else {
+          updatedDropdownArraySet.add(tempArray[i][nameData]);
+        }
+
+        if (tempArray[i][nameData]) {
+          updatedTempArray.push({
+            ...filteredExcelData[i],
+            [nameData]: tempArray[i][nameData],
+          });
+        } else {
+          updatedTempArray.push({
+            ...filteredExcelData[i],
+          });
+        }
+      }
+
+      setFilteredExcelData(updatedTempArray);
+    } else {
+      let updatedSelectedTitleArray = [...selectedTitle];
+
+      updatedSelectedTitleArray = updatedSelectedTitleArray.filter(
+        (name) => name !== nameData
+      );
+      setSelectedTitle(updatedSelectedTitleArray);
+
+      const tempArray = JSON.parse(JSON.stringify(filteredExcelData));
+
+      for (let i = 0; i < tempArray.length; i++) {
+        delete tempArray[i][nameData];
+      }
+      for (let i = 0; i < arrayToDisplay.length; i++) {
+        delete arrayToDisplay[i][nameData];
+      }
+      setFilteredExcelData(tempArray);
+    }
+  };
+
+  const generateCheckedList = (e, data) => {
+    const arrayToCompare = { ...compareList }; 
+    if (e.length > 0) {
+
+      const values = e.map((val) => val.value);
+      if (arrayToCompare.hasOwnProperty(data)) {
+        e.forEach((val) => {
+          if (!arrayToCompare[data].includes(val.value)) {
+            arrayToCompare[data].push(val.value);
+          }
+        });
+      } else {
+        arrayToCompare[data] = values.filter(
+          (val, index) => values.indexOf(val) === index
+        );
+      }
+
+    } else {
+      delete arrayToCompare[data];
+      if (Object.keys(arrayToCompare).length === 0) {
+        setArrayToDisplay([]);
+      }
+    }
+    setCompareList(arrayToCompare);
+  };
+
+  const generateTable = () => {
+    const updatedArray = JSON.parse(JSON.stringify(excelData));
+
+    const filteredArray = updatedArray.filter((obj) => {
+      return Object.keys(compareList).every((key) => {
+        return compareList[key].includes(obj[key]);
+      });
+    });
+
+    const titleData = selectedTitle;
+    const updatedArrayToDisplay = [];
+
+    for (let i = 0; i < filteredArray.length; i++) {
+      const tempArray = {};
+      for (let j = 0; j < titleData.length; j++) {
+        tempArray[titleData[j]] = filteredArray[i][titleData[j]];
+      }
+      updatedArrayToDisplay.push(tempArray);
+    }
+
+
+    const tempChartArrayData = [];
+
+    Object.keys(updatedArrayToDisplay[0]).forEach((key) => {
+      for (let i = 0; i < updatedArrayToDisplay.length; i++) {
+        if (tempChartArrayData.hasOwnProperty(key)) {
+          tempChartArrayData[key].push(updatedArrayToDisplay[i][key]);
+        } else {
+          tempChartArrayData[key] = [];
+          tempChartArrayData[key].push(updatedArrayToDisplay[i][key]);
+        }
+      }
+    });
+
+    if (Object.keys(compareList).length > 0) {
+      setArrayToDisplay(updatedArrayToDisplay);
+    }
+  };
+
+  useEffect(() => {
+    generateTable();
+  }, [compareList, selectedTitle]);
+
+  const sortData = (value, sortType) => {
+    const updatedArray = JSON.parse(JSON.stringify(arrayToDisplay));
+    if (value !== sortSelection.sortValue) {
+      sortType = "asc";
+    }
+    updatedArray.sort((a, b) => {
+      if (sortType === "asc") {
+        
+        if (typeof a[value] === "string" && typeof b[value] === "string") {
+          return a[value].localeCompare(b[value]);
+        }
+        
+        else if (!isNaN(a[value]) && !isNaN(b[value])) {
+          return parseFloat(a[value]) - parseFloat(b[value]);
+        }
+        
+        else if (isValidDate(a[value]) && isValidDate(b[value])) {
+          return new Date(a[value]) - new Date(b[value]);
+        }
+        else {
+          return 0;
+        }
+      } else {
+        if (typeof a[value] === "string" && typeof b[value] === "string") {
+          return b[value].localeCompare(a[value]);
+        } else if (!isNaN(a[value]) && !isNaN(b[value])) {
+          return parseFloat(b[value]) - parseFloat(a[value]);
+        } else if (isValidDate(a[value]) && isValidDate(b[value])) {
+          return new Date(b[value]) - new Date(a[value]);
+        } else {
+          return 0;
+        }
+      }
+    });
+
+    function isValidDate(value) {
+      return !isNaN(new Date(value).getTime());
+    }
+
+    console.log(updatedArray);
+    setArrayToDisplay(updatedArray);
+
+    setSortSelection({
+      ...sortSelection,
+      sortValue: value,
+      sortDirection: sortType,
+    });
+  };
+
+  return (
+    <div className="container-fluid">
+      <main class="content-wrapper row">
+        <aside class="col-md-2">
+          <div class="sideNav">
+            <h2> Titles </h2>
+            {Object.keys(excelData[0]).map((data) => (
+              <div key={data} class="custom-control custom-checkbox mb-3">
+                <input
+                  type="checkbox"
+                  class="custom-control-input"
+                  onChange={checkHandler}
+                  id={data}
+                  name={data}
+                  value={data}
+                />
+                &nbsp;
+                <label className="custom-control-label" htmlFor={data}>
+                  {data}
+                </label>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div class="container-fluid col-md-10">
+          <div
+            className="col-sm-9"
+            style={{
+              // backgroundColor: "lightblue",
+              borderRadius: "20px",
+              padding: "10px",
+            }}
+          >
+            <div>
+              <h1 class="mt-1 displayInline">Table</h1>
+
+              {arrayToDisplay.length > 0 && (
+                <p class="naturalLanguageText displayInline">
+                  I want to see this in{" "}
+                  <a>
+                    <label htmlFor="generateChart">Chart</label>
+                  </a>
+                </p>
+              )}
+
+              <button
+                id="generateChart"
+                type="button"
+                className="btn btn-primary"
+                data-toggle="modal"
+                data-target="#exampleModalCenter"
+                x
+              >
+                Generate chart
+              </button>
+            </div>
+            <div class="tableDiv">
+              <table
+                class="table table-responsive table-hover"
+                style={{ minHeight: "500px" }}
+              >
+                <thead>
+                  <tr>
+                    {filteredExcelData.length > 0 &&
+                      Object.keys(filteredExcelData[0]).map((data) => (
+                        <th key={data}>
+                          <div>
+                            <div
+                              onClick={() =>
+                                sortData(
+                                  data,
+                                  sortSelection.sortDirection === "asc"
+                                    ? "desc"
+                                    : "asc"
+                                )
+                              }
+                            >
+                              <strong>
+                                {data}
+                                {sortSelection.sortValue === data &&
+                                sortSelection.sortDirection === "asc"
+                                  ? "▲"
+                                  : ""}
+                                {sortSelection.sortValue === data &&
+                                sortSelection.sortDirection === "desc"
+                                  ? "▼"
+                                  : ""}
+                              </strong>
+                            </div>
+                            {filteredExcelData.length > 0 && (
+                              <MultiSelect
+                                options={filteredExcelData
+                                  .filter((ele) => ele[data] !== undefined)
+                                  .map((ele) => {
+                                    return {
+                                      label: ele[data],
+                                      value: ele[data],
+                                    };
+                                  })
+                                  .sort((a, b) => {
+                                    if (!isNaN(a.value)) {
+                                      return a.value - b.value;
+                                    }
+                                  })}
+                                value={
+                                  compareList[data]
+                                    ? compareList[data].map((val) => ({
+                                        label: val,
+                                        value: val,
+                                      }))
+                                    : []
+                                }
+                                onChange={(e) => generateCheckedList(e, data)}
+                                labelledBy="Select"
+                              />
+                            )}
+                          </div>
+                        </th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {arrayToDisplay.map((row) => (
+                    <tr>
+                      {Object.values(row).map((data, index) => (
+                        <td key={index}>{data}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* modal */}
+
+      <div
+        class="modal fade"
+        id="exampleModalCenter"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="exampleModalCenterTitle"
+        aria-hidden="true"
+      >
+        <div
+          class="modal-dialog modal-dialog-centered mw-100 w-90 modal-dialog-scrollable"
+          role="document"
+        >
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">
+                Charts
+              </h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-6 ">
+                    {arrayToDisplay.length > 0 && (
+                      <BarChart chartData={arrayToDisplay} />
+                    )}
+                  </div>
+                  <div class="col-md-6 ">
+                    {arrayToDisplay.length > 0 && (
+                      <LineChart chartData={arrayToDisplay} />
+                    )}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    {arrayToDisplay.length > 0 && (
+                      <div
+                        class="chart-container"
+                        style={{ height: "400px", width: "400px" }}
+                      >
+                        {" "}
+                        {/* Adjust height and width as needed */}
+                        <PieChart chartData={arrayToDisplay} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+
