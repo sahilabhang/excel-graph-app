@@ -141,6 +141,7 @@ const Dashboard = () => {
     }
 
     if(updatedArrayToDisplay.length === 0){
+      setArrayToDisplay([]);
       return;
     }
     const tempChartArrayData = [];
