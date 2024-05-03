@@ -20,7 +20,7 @@ const PieChart = ({ chartData }) => {
 
   useEffect(() => {
     handleChange(Object.keys(chartData[0])[0]);
-  }, []);
+  }, [chartData]);
 
   const chartDataValue = {
     labels: Object.keys(chartOption)?.map((age) => `${age}`),

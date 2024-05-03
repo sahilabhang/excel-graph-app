@@ -108,10 +108,8 @@ body {
 .tableDiv{
   border-radius: 20px;
     padding: 10px;
-    width: 1000px;
     overflow: auto;
-    /*min-height: 500px;*/
-    height:500px;
+    height:100vh;
 }
 
 h1{
@@ -138,3 +136,9 @@ h2{
 
 .displayInline{display:inline;border-left:2px dashed #81b848;}
 .displayInline:first-child{padding-right:20px;border: none;}
+
+.badge-success{
+  background: #e9f5f2;
+  color: #28a745;
+  line-height: 1.5;
+}

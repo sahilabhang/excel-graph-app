@@ -5,9 +5,11 @@ import "./Dashboard.css";
 import PieChart from "./charts/PieChart";
 import BarChart from "./charts/BarChart";
 import LineChart from "./charts/LineChart";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { excelData } = useContext(ExcelContext);
+  const navigate = useNavigate();
   const [compareList, setCompareList] = useState({});
   const [filteredExcelData, setFilteredExcelData] = useState([]);
   const [arrayToDisplay, setArrayToDisplay] = useState([]);
@@ -17,6 +19,24 @@ const Dashboard = () => {
     sortValue: "",
     sortDirection: "asc",
   });
+
+  const navigateToUpload = () => {
+    navigate("/");
+  };
+
+  const clearCheckbox = () => {
+    let checkboxHTMLCollection = document.getElementsByClassName(
+      "custom-control-input"
+    );
+    const checkboxArray = Array.from(checkboxHTMLCollection);
+    checkboxArray.forEach((ele) => (ele.checked = false));
+
+    // clear respective states
+    setCompareList([]);
+    setSelectedTitle([]);
+    setFilteredExcelData([]);
+    setArrayToDisplay([]);
+  };
 
   const checkHandler = (e) => {
     let nameData = e.target.name;
@@ -52,6 +72,7 @@ const Dashboard = () => {
       setFilteredExcelData(updatedTempArray);
     } else {
       let updatedSelectedTitleArray = [...selectedTitle];
+      let updatedCompareList = { ...compareList };
 
       updatedSelectedTitleArray = updatedSelectedTitleArray.filter(
         (name) => name !== nameData
@@ -66,12 +87,15 @@ const Dashboard = () => {
       for (let i = 0; i < arrayToDisplay.length; i++) {
         delete arrayToDisplay[i][nameData];
       }
+      delete updatedCompareList[nameData];
+
+      setCompareList(updatedCompareList);
       setFilteredExcelData(tempArray);
     }
   };
 
   const generateCheckedList = (e, data) => {
-    const arrayToCompare = { ...compareList }; 
+    const arrayToCompare = { ...compareList };
     if (e.length > 0) {
 
       const values = e.map((val) => val.value);
@@ -105,7 +129,7 @@ const Dashboard = () => {
       });
     });
 
-    const titleData = selectedTitle;
+    const titleData = [...selectedTitle];
     const updatedArrayToDisplay = [];
 
     for (let i = 0; i < filteredArray.length; i++) {
@@ -116,7 +140,9 @@ const Dashboard = () => {
       updatedArrayToDisplay.push(tempArray);
     }
 
-
+    if(updatedArrayToDisplay.length === 0){
+      return;
+    }
     const tempChartArrayData = [];
 
     Object.keys(updatedArrayToDisplay[0]).forEach((key) => {
@@ -146,29 +172,26 @@ const Dashboard = () => {
     }
     updatedArray.sort((a, b) => {
       if (sortType === "asc") {
-        
-        if (typeof a[value] === "string" && typeof b[value] === "string") {
-          return a[value].localeCompare(b[value]);
-        }
-        
-        else if (!isNaN(a[value]) && !isNaN(b[value])) {
+         if (!isNaN(a[value]) && !isNaN(b[value])) {
           return parseFloat(a[value]) - parseFloat(b[value]);
-        }
-        
-        else if (isValidDate(a[value]) && isValidDate(b[value])) {
+        } else if (isValidDate(a[value]) && isValidDate(b[value])) {
           return new Date(a[value]) - new Date(b[value]);
+        } else if (typeof a[value] === "string" && typeof b[value] === "string") {
+          return a[value].localeCompare(b[value]);
         }
         else {
           return 0;
         }
       } else {
-        if (typeof a[value] === "string" && typeof b[value] === "string") {
-          return b[value].localeCompare(a[value]);
-        } else if (!isNaN(a[value]) && !isNaN(b[value])) {
+         if (!isNaN(a[value]) && !isNaN(b[value])) {
           return parseFloat(b[value]) - parseFloat(a[value]);
         } else if (isValidDate(a[value]) && isValidDate(b[value])) {
           return new Date(b[value]) - new Date(a[value]);
-        } else {
+        } else if (typeof a[value] === "string" && typeof b[value] === "string") {
+          return b[value].localeCompare(a[value]);
+        }
+        
+        else {
           return 0;
         }
       }
@@ -193,7 +216,42 @@ const Dashboard = () => {
       <main class="content-wrapper row">
         <aside class="col-md-2">
           <div class="sideNav">
-            <h2> Titles </h2>
+            <div className="d-flex flex-row align-items-center">
+              {" "}
+              <div onClick={navigateToUpload}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="currentColor"
+                  className="bi bi-arrow-left-circle"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"
+                  />
+                </svg>
+              </div>
+              &nbsp;&nbsp;&nbsp;
+              <div>
+                <h2>Titles</h2>
+              </div>
+            </div>
+            <div
+              style={{
+                visibility: selectedTitle.length > 0 ? "visible" : "hidden",
+                marginTop: "-15px",
+                marginBottom: "5px",
+              }}
+            >
+              <span
+                className="badge badge-pill badge-success"
+                onClick={clearCheckbox}
+              >
+                clear checkbox
+              </span>
+            </div>
             {Object.keys(excelData[0]).map((data) => (
               <div key={data} class="custom-control custom-checkbox mb-3">
                 <input
@@ -215,7 +273,7 @@ const Dashboard = () => {
 
         <div class="container-fluid col-md-10">
           <div
-            className="col-sm-9"
+            className="col-sm-12"
             style={{
               // backgroundColor: "lightblue",
               borderRadius: "20px",
@@ -248,7 +306,7 @@ const Dashboard = () => {
             <div class="tableDiv">
               <table
                 class="table table-responsive table-hover"
-                style={{ minHeight: "500px" }}
+                style={{ minHeight: "500px", marginBottom: '50px'}}
               >
                 <thead>
                   <tr>
@@ -400,4 +458,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

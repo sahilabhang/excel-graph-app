@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
-const LineChart = ({ chartData }) => {
+const CustomChart = ({ chartData, ChartType }) => {
   const [chartOption, setChartOption] = useState("");
   const [selectedOption, setSelectedOption] = useState(Object.keys(chartData[0])[0]);
 
@@ -19,8 +19,8 @@ const LineChart = ({ chartData }) => {
   };
 
   useEffect(() => {
-        handleChange(Object.keys(chartData[0])[0]);
-  }, [chartData]);
+    handleChange(Object.keys(chartData[0])[0]);
+  }, []);
 
   const chartDataValue = {
     labels: Object.keys(chartOption).map((age) => `${age}`),
@@ -46,7 +46,7 @@ const LineChart = ({ chartData }) => {
 
   return (
     <div>
-      <h1>Line Chart</h1>
+      <h1>{ChartType} Chart</h1>
       <div class="form-check-inline">
         {Object.keys(chartData[0]).map((data, index) => (
           <div class="form-check-inline">
@@ -54,7 +54,7 @@ const LineChart = ({ chartData }) => {
               <input
                 type="radio"
                 class="form-check-input"
-                name="line-optradio"
+                name={`${ChartType}-optradio`}
                 value={data}
                 onChange={() => handleChange(data)} 
                 checked={(index === 0 && !selectedOption) || selectedOption === data}
@@ -65,9 +65,17 @@ const LineChart = ({ chartData }) => {
         ))}
       </div>
 
-      <Line data={chartDataValue} />
+      {ChartType === "Pie" && (
+        <Pie data={chartDataValue} />
+      )}
+      {ChartType === "Line" && (
+        <Line data={chartDataValue} />
+      )}
+      {ChartType === "Bar" && (
+        <Bar data={chartDataValue} />
+      )}
     </div>
   );
 };
 
-export default LineChart;
+export default CustomChart;
