@@ -36,6 +36,9 @@ const Dashboard = () => {
     setSelectedTitle([]);
     setFilteredExcelData([]);
     setArrayToDisplay([]);
+
+    // reset sorting
+    setSortSelection({ sortValue: "", sortDirection: "asc" });
   };
 
   const checkHandler = (e) => {
@@ -79,16 +82,22 @@ const Dashboard = () => {
       );
       setSelectedTitle(updatedSelectedTitleArray);
 
-      const tempArray = JSON.parse(JSON.stringify(filteredExcelData));
+      let tempArray = JSON.parse(JSON.stringify(filteredExcelData));
 
       for (let i = 0; i < tempArray.length; i++) {
         delete tempArray[i][nameData];
+      }
+      if (Object.keys(tempArray[0]).length === 0) {
+        tempArray = [];
       }
       for (let i = 0; i < arrayToDisplay.length; i++) {
         delete arrayToDisplay[i][nameData];
       }
       delete updatedCompareList[nameData];
 
+      if (updatedCompareList) {
+        setArrayToDisplay([]);
+      }
       setCompareList(updatedCompareList);
       setFilteredExcelData(tempArray);
     }
@@ -158,9 +167,25 @@ const Dashboard = () => {
     });
 
     if (Object.keys(compareList).length > 0) {
-      setArrayToDisplay(updatedArrayToDisplay);
+      const arr = combineAndCount(updatedArrayToDisplay);
+      setArrayToDisplay(arr);
     }
   };
+
+  function combineAndCount(data) {
+    const combinedData = {};
+
+    data.forEach((obj) => {
+      const key = `${JSON.stringify(obj)}`;
+      if (combinedData[key]) {
+        combinedData[key].count++;
+      } else {
+        combinedData[key] = { count: 1, ...obj };
+      }
+    });
+
+    return Object.values(combinedData);
+  }
 
   useEffect(() => {
     generateTable();
@@ -173,26 +198,29 @@ const Dashboard = () => {
     }
     updatedArray.sort((a, b) => {
       if (sortType === "asc") {
-         if (!isNaN(a[value]) && !isNaN(b[value])) {
+        if (!isNaN(a[value]) && !isNaN(b[value])) {
           return parseFloat(a[value]) - parseFloat(b[value]);
         } else if (isValidDate(a[value]) && isValidDate(b[value])) {
           return new Date(a[value]) - new Date(b[value]);
-        } else if (typeof a[value] === "string" && typeof b[value] === "string") {
+        } else if (
+          typeof a[value] === "string" &&
+          typeof b[value] === "string"
+        ) {
           return a[value].localeCompare(b[value]);
-        }
-        else {
+        } else {
           return 0;
         }
       } else {
-         if (!isNaN(a[value]) && !isNaN(b[value])) {
+        if (!isNaN(a[value]) && !isNaN(b[value])) {
           return parseFloat(b[value]) - parseFloat(a[value]);
         } else if (isValidDate(a[value]) && isValidDate(b[value])) {
           return new Date(b[value]) - new Date(a[value]);
-        } else if (typeof a[value] === "string" && typeof b[value] === "string") {
+        } else if (
+          typeof a[value] === "string" &&
+          typeof b[value] === "string"
+        ) {
           return b[value].localeCompare(a[value]);
-        }
-        
-        else {
+        } else {
           return 0;
         }
       }
@@ -304,6 +332,11 @@ const Dashboard = () => {
                 Generate chart
               </button>
             </div>
+            {filteredExcelData.length === 0 && (
+                <span className="d-flex justify-content-center align-items-center" style={{minHeight: "80vh"}}>
+                  <h2 style={{ color: "grey"}}>No Data Found. Start selecting checkboxes and filter the rows.</h2>
+                </span>   
+              )}
             <div class="tableDiv">
               <table
                 class="table table-responsive table-hover"
@@ -311,6 +344,28 @@ const Dashboard = () => {
               >
                 <thead>
                   <tr>
+                    {filteredExcelData.length > 0 && (
+                      <td onClick={() =>
+                        sortData(
+                          'count',
+                          sortSelection.sortDirection === "asc"
+                            ? "desc"
+                            : "asc"
+                        )
+                      }>
+                        <strong>
+                          Count{" "}
+                          {sortSelection.sortValue === 'count' &&
+                          sortSelection.sortDirection === "asc"
+                            ? "▲"
+                            : ""}
+                          {sortSelection.sortValue === 'count' &&
+                          sortSelection.sortDirection === "desc"
+                            ? "▼"
+                            : ""}
+                        </strong>
+                      </td>
+                    )}
                     {filteredExcelData.length > 0 &&
                       Object.keys(filteredExcelData[0]).map((data) => (
                         <th key={data}>
@@ -373,7 +428,17 @@ const Dashboard = () => {
                   {arrayToDisplay.map((row) => (
                     <tr>
                       {Object.values(row).map((data, index) => (
-                        <td key={index}>{data}</td>
+                        <>
+                          {index === 0 ? (
+                            <td key={index}>
+                              <span className="badge badge-pill badge-info">
+                                {data}
+                              </span>
+                            </td>
+                          ) : (
+                            <td key={index}>{data}</td>
+                          )}
+                        </>
                       ))}
                     </tr>
                   ))}
