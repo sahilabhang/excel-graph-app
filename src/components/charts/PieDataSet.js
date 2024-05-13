@@ -141,6 +141,9 @@ export default function PieDataSet({ chartData }) {
     }
   }, [selectedOption])
 
+  useEffect(() => {
+    handleChange(null, Object.keys(chartData[0])[1])
+  },[chartData])
 
   return (
     <React.Fragment>

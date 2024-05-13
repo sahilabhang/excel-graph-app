@@ -13,6 +13,7 @@ export default function BarChartStacked({ chartData }) {
   const handleChange = (e, data) => {
     if (!e) {
       handleSingleCheckedCheckbox(data);
+      return;
     }
 
     if (e.target.checked) {
@@ -132,6 +133,10 @@ export default function BarChartStacked({ chartData }) {
       });
     }
   }, [selectedOption, selectedSecondaryOption]);
+
+  useEffect(() => {
+    handleChange(null, Object.keys(chartData[0])[1])
+  },[chartData])
 
   return (
     <React.Fragment>
