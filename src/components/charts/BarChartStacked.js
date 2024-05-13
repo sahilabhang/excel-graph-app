@@ -83,14 +83,14 @@ export default function BarChartStacked({ chartData }) {
     let tempSeriesArray = {};
 
     for (let i = 0; i < uniqueValues.length; i++) {
-      let arr = [0, 0];
+      let arr = Array(labelValues.length).fill(0);
       for (let j = 0; j < labelValues.length; j++) {
         for (let k = 0; k < chartData.length; k++) {
           if (
             chartData[k][e] === uniqueValues[i] &&
             labelValues[j] == chartData[k][selectedOption]
           ) {
-            arr[j] = chartData[k]["count"];
+            arr[j] = chartData[k]["count"] + arr[j];
           }
         }
       }
