@@ -2,10 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { ExcelContext } from "../context/excel-context";
 import { MultiSelect } from "react-multi-select-component";
 import "./Dashboard.css";
-import PieChart from "./charts/PieChart";
-import BarChart from "./charts/BarChart";
-import LineChart from "./charts/LineChart";
 import { useNavigate } from "react-router-dom";
+import PieDataSet from "./charts/PieDataSet";
+import BarChartStacked from "./charts/BarChartStacked";
 
 const Dashboard = () => {
   const { excelData } = useContext(ExcelContext);
@@ -480,28 +479,14 @@ const Dashboard = () => {
             <div class="modal-body">
               <div class="container-fluid">
                 <div class="row">
-                  <div class="col-md-6 ">
+                  <div class="col-md-6">
                     {arrayToDisplay.length > 0 && (
-                      <BarChart chartData={arrayToDisplay} />
+                      <BarChartStacked chartData={arrayToDisplay} />
                     )}
                   </div>
                   <div class="col-md-6 ">
                     {arrayToDisplay.length > 0 && (
-                      <LineChart chartData={arrayToDisplay} />
-                    )}
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-12">
-                    {arrayToDisplay.length > 0 && (
-                      <div
-                        class="chart-container"
-                        style={{ height: "400px", width: "400px" }}
-                      >
-                        {" "}
-                        {/* Adjust height and width as needed */}
-                        <PieChart chartData={arrayToDisplay} />
-                      </div>
+                      <PieDataSet chartData={arrayToDisplay} />
                     )}
                   </div>
                 </div>
