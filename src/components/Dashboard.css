@@ -142,3 +142,49 @@ h2{
   color: #28a745;
   line-height: 1.5;
 }
+
+.bgWhite{
+  background-color: #fff;
+  border: 2px solid #eee;
+  border-radius: 15px;
+  padding-bottom:20px
+}
+
+.mainContent h1{
+  font-size: 1.7rem;
+  padding: 10px 0 5px;
+  border-bottom: 1px dashed #ddd;
+  color: #2596be;
+}
+
+.table .thead-dark th {
+  color: #fff;
+  background-color: #12a5d0;
+  border-color: #0f92b8;
+  font-weight: 400;
+}
+.table-bordered tr:nth-child(even){
+  background-color:#fafafa;
+}
+
+.badge-info {
+  color: #fff;
+  background-color: #81b848;
+}
+
+.badge-success{
+  background: #e9f5f2;
+  color: #81b848;
+  line-height: 2;
+}
+
+.form-check-inline{
+  display: inline-block;
+}
+
+.custom-control-input:checked~.custom-control-label::before {
+  color: #fff;
+  border-color: #fff;
+  background-color: #12a5d0;
+}
+

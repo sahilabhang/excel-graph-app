@@ -167,7 +167,7 @@ export default function BarChartStacked({ chartData }) {
         )}
       </div>
       <BarChart
-        width={700}
+        // width={700}
         height={500}
         series={seriesArray}
         xAxis={[{ data: xLabelsArray, scaleType: "band" }]}

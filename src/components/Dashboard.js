@@ -12,7 +12,6 @@ const Dashboard = () => {
   const [compareList, setCompareList] = useState({});
   const [filteredExcelData, setFilteredExcelData] = useState([]);
   const [arrayToDisplay, setArrayToDisplay] = useState([]);
-  const [selected, setSelected] = useState([]);
   const [selectedTitle, setSelectedTitle] = useState([]);
   const [sortSelection, setSortSelection] = useState({
     sortValue: "",
@@ -22,6 +21,12 @@ const Dashboard = () => {
   const navigateToUpload = () => {
     navigate("/");
   };
+
+  useEffect(() => {
+    if (excelData.length === 0) {
+      navigateToUpload();
+    }
+  }, [excelData]);
 
   const clearCheckbox = () => {
     let checkboxHTMLCollection = document.getElementsByClassName(
@@ -105,7 +110,7 @@ const Dashboard = () => {
   const generateCheckedList = (e, data) => {
     const arrayToCompare = { ...compareList };
     if (e.length > 0) {
-
+      arrayToCompare[data] = [];
       const values = e.map((val) => val.value);
       if (arrayToCompare.hasOwnProperty(data)) {
         e.forEach((val) => {
@@ -118,7 +123,6 @@ const Dashboard = () => {
           (val, index) => values.indexOf(val) === index
         );
       }
-
     } else {
       delete arrayToCompare[data];
       if (Object.keys(arrayToCompare).length === 0) {
@@ -148,7 +152,7 @@ const Dashboard = () => {
       updatedArrayToDisplay.push(tempArray);
     }
 
-    if(updatedArrayToDisplay.length === 0){
+    if (updatedArrayToDisplay.length === 0) {
       setArrayToDisplay([]);
       return;
     }
@@ -269,8 +273,8 @@ const Dashboard = () => {
             <div
               style={{
                 visibility: selectedTitle.length > 0 ? "visible" : "hidden",
-                marginTop: "-15px",
                 marginBottom: "5px",
+                marginTop: "-15px",
               }}
             >
               <span
@@ -280,35 +284,36 @@ const Dashboard = () => {
                 clear checkbox
               </span>
             </div>
-            {Object.keys(excelData[0]).map((data) => (
-              <div key={data} class="custom-control custom-checkbox mb-3">
-                <input
-                  type="checkbox"
-                  class="custom-control-input"
-                  onChange={checkHandler}
-                  id={data}
-                  name={data}
-                  value={data}
-                />
-                &nbsp;
-                <label className="custom-control-label" htmlFor={data}>
-                  {data}
-                </label>
-              </div>
-            ))}
+            {excelData.length > 0 &&
+              Object.keys(excelData[0]).map((data) => (
+                <div key={data} class="custom-control custom-checkbox mb-3">
+                  <input
+                    type="checkbox"
+                    class="custom-control-input"
+                    onChange={checkHandler}
+                    id={data}
+                    name={data}
+                    value={data}
+                  />
+                  &nbsp;
+                  <label className="custom-control-label" htmlFor={data}>
+                    {data}
+                  </label>
+                </div>
+              ))}
           </div>
         </aside>
 
-        <div class="container-fluid col-md-10">
+        <div class="container-fluid col-md-10 mainContent">
           <div
             className="col-sm-12"
             style={{
               // backgroundColor: "lightblue",
               borderRadius: "20px",
-              padding: "10px",
+              padding: "10px"
             }}
           >
-            <div>
+            {/* <div>
               <h1 class="mt-1 displayInline">Table</h1>
 
               {arrayToDisplay.length > 0 && (
@@ -330,119 +335,147 @@ const Dashboard = () => {
               >
                 Generate chart
               </button>
-            </div>
+            </div> */}
             {filteredExcelData.length === 0 && (
-                <span className="d-flex justify-content-center align-items-center" style={{minHeight: "80vh"}}>
-                  <h2 style={{ color: "grey"}}>No Data Found. Start selecting checkboxes and filter the rows.</h2>
-                </span>   
-              )}
-            <div class="tableDiv">
-              <table
-                class="table table-responsive table-hover"
-                style={{ minHeight: "500px", marginBottom: '50px'}}
+              <span
+                className="d-flex justify-content-center align-items-center"
+                style={{ minHeight: "100vh" }}
               >
-                <thead>
-                  <tr>
-                    {filteredExcelData.length > 0 && (
-                      <td onClick={() =>
+                <h2 style={{ color: "grey" }}>
+                  No Data Found. Start selecting checkboxes and filter the rows.
+                </h2>
+              </span>
+            )}
+            <div className="row p-2 bgWhite mb-3">
+              {filteredExcelData.length > 0 &&
+                Object.keys(filteredExcelData[0])?.map((data) => (
+                  // <th >
+                  <div
+                    key={data}
+                    style={{
+                      display: "inline-block",
+                      paddingRight: "20px",
+                      padding: "10px",
+                    }}
+                  >
+                    <div
+                      onClick={() =>
                         sortData(
-                          'count',
-                          sortSelection.sortDirection === "asc"
-                            ? "desc"
-                            : "asc"
+                          data,
+                          sortSelection.sortDirection === "asc" ? "desc" : "asc"
                         )
-                      }>
-                        <strong>
-                          Count{" "}
-                          {sortSelection.sortValue === 'count' &&
-                          sortSelection.sortDirection === "asc"
-                            ? "▲"
-                            : ""}
-                          {sortSelection.sortValue === 'count' &&
-                          sortSelection.sortDirection === "desc"
-                            ? "▼"
-                            : ""}
-                        </strong>
-                      </td>
+                      }
+                    >
+                      <strong>
+                        {data}
+                        {sortSelection.sortValue === data &&
+                        sortSelection.sortDirection === "asc"
+                          ? "▲"
+                          : ""}
+                        {sortSelection.sortValue === data &&
+                        sortSelection.sortDirection === "desc"
+                          ? "▼"
+                          : ""}
+                      </strong>
+                    </div>
+                    {filteredExcelData.length > 0 && (
+                      <MultiSelect
+                        options={filteredExcelData
+                          .filter((ele) => ele[data] !== undefined)
+                          .map((ele) => {
+                            return {
+                              label: ele[data],
+                              value: ele[data],
+                            };
+                          })
+                          .sort((a, b) => {
+                            if (!isNaN(a.value)) {
+                              return a.value - b.value;
+                            }
+                          })}
+                        value={
+                          compareList[data]
+                            ? compareList[data].map((val) => ({
+                                label: val,
+                                value: val,
+                              }))
+                            : []
+                        }
+                        onChange={(e) => generateCheckedList(e, data)}
+                        labelledBy="Select"
+                      />
                     )}
-                    {filteredExcelData.length > 0 &&
-                      Object.keys(filteredExcelData[0]).map((data) => (
-                        <th key={data}>
-                          <div>
-                            <div
-                              onClick={() =>
-                                sortData(
-                                  data,
-                                  sortSelection.sortDirection === "asc"
-                                    ? "desc"
-                                    : "asc"
-                                )
-                              }
-                            >
-                              <strong>
-                                {data}
-                                {sortSelection.sortValue === data &&
-                                sortSelection.sortDirection === "asc"
-                                  ? "▲"
-                                  : ""}
-                                {sortSelection.sortValue === data &&
-                                sortSelection.sortDirection === "desc"
-                                  ? "▼"
-                                  : ""}
-                              </strong>
-                            </div>
-                            {filteredExcelData.length > 0 && (
-                              <MultiSelect
-                                options={filteredExcelData
-                                  .filter((ele) => ele[data] !== undefined)
-                                  .map((ele) => {
-                                    return {
-                                      label: ele[data],
-                                      value: ele[data],
-                                    };
-                                  })
-                                  .sort((a, b) => {
-                                    if (!isNaN(a.value)) {
-                                      return a.value - b.value;
-                                    }
-                                  })}
-                                value={
-                                  compareList[data]
-                                    ? compareList[data].map((val) => ({
-                                        label: val,
-                                        value: val,
-                                      }))
-                                    : []
-                                }
-                                onChange={(e) => generateCheckedList(e, data)}
-                                labelledBy="Select"
-                              />
-                            )}
-                          </div>
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
+                  </div>
+                  // </th>
+                ))}
+              {/* </tr>
+                </thead> */}
+              {/* <tbody>
                   {arrayToDisplay.map((row) => (
                     <tr>
                       {Object.values(row).map((data, index) => (
-                        <>
-                          {index === 0 ? (
-                            <td key={index}>
-                              <span className="badge badge-pill badge-info">
-                                {data}
-                              </span>
-                            </td>
-                          ) : (
-                            <td key={index}>{data}</td>
-                          )}
-                        </>
+                        <td key={index}>{data}</td>
                       ))}
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                </tbody> */}
+              {/* </table> */}
+            </div>
+
+            {/* <hr /> */}
+            <div
+              className="row"
+              style={{ maxHeight: "80vh", overflowY: "auto"}}
+            >
+              <div className={`col-md-12 ${arrayToDisplay.length > 0 ? 'p-3 mb-3 bgWhite' : '' }`} >
+                {arrayToDisplay.length > 0 && <h1>Table</h1>}
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  <table
+                    className="table table-bordered mt-10"
+                    style={{ maxHeight: "300px", overflowY: "scroll" }}
+                  >
+                    <thead className="thead-dark">
+                      <tr>
+                        {arrayToDisplay.length > 0 &&
+                          Object.keys(arrayToDisplay[0])?.map((data) => (
+                            <th key={data}>{data}</th>
+                          ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {arrayToDisplay?.map((row) => (
+                        <tr>
+                          {Object.values(row).map((data, index) =>
+                            index === 0 ? (
+                              <td key={index}>
+                                <span className="badge badge-pill badge-info">
+                                  {data}
+                                </span>
+                              </td>
+                            ) : (
+                              <td key={index}>{data}</td>
+                            )
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className={`col-md-6 ${arrayToDisplay.length > 0 ? 'bgWhite p-3' : '' }`}>
+                {arrayToDisplay.length > 0 && (
+                  <div>
+                  <BarChartStacked chartData={arrayToDisplay} />
+                  </div>
+                )}
+              </div>
+              <div className={`col-md-6 ${arrayToDisplay.length > 0 ? 'bgWhite p-3' : '' }`}>
+                {arrayToDisplay.length > 0 && (
+                  <div>
+                  <PieDataSet chartData={arrayToDisplay} />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -480,14 +513,14 @@ const Dashboard = () => {
               <div class="container-fluid">
                 <div class="row">
                   <div class="col-md-6">
-                    {arrayToDisplay.length > 0 && (
+                    {/* {arrayToDisplay.length > 0 && (
                       <BarChartStacked chartData={arrayToDisplay} />
-                    )}
+                    )} */}
                   </div>
                   <div class="col-md-6 ">
-                    {arrayToDisplay.length > 0 && (
+                    {/* {arrayToDisplay.length > 0 && (
                       <PieDataSet chartData={arrayToDisplay} />
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>
