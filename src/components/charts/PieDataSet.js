@@ -173,7 +173,7 @@ export default function PieDataSet({ chartData }) {
             )
         )}
       </div>
-      <Stack sx={{ width: "100%" }}>
+      <Stack sx={{ width: "100%" }} alignItems={'center'}>
         <Box sx={{ flexGrow: 1 }}>
           <PieChart
             series={series}
